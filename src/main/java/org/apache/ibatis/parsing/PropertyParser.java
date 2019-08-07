@@ -20,6 +20,7 @@ import java.util.Properties;
 /**
  * @author Clinton Begin
  * @author Kazuki Shimizu
+ * 动态解析器
  */
 public class PropertyParser {
 
@@ -51,6 +52,7 @@ public class PropertyParser {
   }
 
   public static String parse(String string, Properties variables) {
+
     VariableTokenHandler handler = new VariableTokenHandler(variables);
     GenericTokenParser parser = new GenericTokenParser("${", "}", handler);
     return parser.parse(string);

@@ -18,10 +18,25 @@ package org.apache.ibatis.autoconstructor;
 import org.apache.ibatis.annotations.AutomapConstructor;
 
 public class AnnotatedSubject {
+  /**
+   *id
+   **/
   private final int id;
+  /**
+   *姓名
+   **/
   private final String name;
+  /**
+   *年龄
+   **/
   private final int age;
+  /**
+   *身高
+   **/
   private final int height;
+  /**
+   *体重
+   **/
   private final int weight;
 
   public AnnotatedSubject(final int id, final String name, final int age, final int height, final int weight) {
