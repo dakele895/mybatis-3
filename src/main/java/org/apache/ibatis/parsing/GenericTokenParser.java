@@ -17,7 +17,7 @@ package org.apache.ibatis.parsing;
 
 /**
  * @author Clinton Begin
- * 主要用来解析${}
+ * 主要用来解析
  */
 public class GenericTokenParser {
   /**
