@@ -44,26 +44,73 @@ import org.apache.ibatis.reflection.property.PropertyNamer;
  * allows for easy mapping between property names and getter/setter methods.
  *
  * @author Clinton Begin
+ *反射工具类
  */
 public class Reflector {
-
+  /**
+   * 对应的类
+   */
   private final Class<?> type;
+  /**
+   * 可读属性数组
+   */
   private final String[] readablePropertyNames;
-  private final String[] writablePropertyNames;
-  private final Map<String, Invoker> setMethods = new HashMap<>();
-  private final Map<String, Invoker> getMethods = new HashMap<>();
-  private final Map<String, Class<?>> setTypes = new HashMap<>();
-  private final Map<String, Class<?>> getTypes = new HashMap<>();
-  private Constructor<?> defaultConstructor;
 
+  /**
+   * 可写属性数组
+   */
+  private final String[] writablePropertyNames;
+  /**
+   * 属性对应的 setting 方法的映射。
+   *
+   * key 为属性名称
+   * value 为 Invoker 对象
+   */
+  private final Map<String, Invoker> setMethods = new HashMap<>();
+  /**
+   * 属性对应的 getting 方法的映射。
+   *
+   * key 为属性名称
+   * value 为 Invoker 对象
+   */
+  private final Map<String, Invoker> getMethods = new HashMap<>();
+
+  /**
+   * 属性对应的 setting 方法的方法参数类型的映射
+   * key 为属性名称
+   * value 为方法参数类型
+   */
+  private final Map<String, Class<?>> setTypes = new HashMap<>();
+
+  /**
+   * 属性对应的 getting 方法的返回值类型的映射
+   *
+   * key 为属性名称
+   * value 为返回值的类型
+   */
+  private final Map<String, Class<?>> getTypes = new HashMap<>();
+
+  /**
+   *默认构造器
+   **/
+  private Constructor<?> defaultConstructor;
+  /**
+   * 不区分大小写的属性集合
+   */
   private Map<String, String> caseInsensitivePropertyMap = new HashMap<>();
 
   public Reflector(Class<?> clazz) {
+    //设置对应得类
     type = clazz;
+    //查找 clazz 的默认构造方法（元参构造方法） 具体实现是通过反射遥历所有构造方法，代码并不复杂，
     addDefaultConstructor(clazz);
+    //初始化 getMethods 和 getTypes ，通过遍历 getting 方法
     addGetMethods(clazz);
+    //初始化 setMethods 和 setTypes ，通过遍历 setting 方法
     addSetMethods(clazz);
+    //初始化通过遍历fields属性
     addFields(clazz);
+    //初始化 readablePropertyNames、writeablePropertyNames、caseInsensitivePropertyMap 属性
     readablePropertyNames = getMethods.keySet().toArray(new String[0]);
     writablePropertyNames = setMethods.keySet().toArray(new String[0]);
     for (String propName : readablePropertyNames) {
@@ -73,22 +120,32 @@ public class Reflector {
       caseInsensitivePropertyMap.put(propName.toUpperCase(Locale.ENGLISH), propName);
     }
   }
-
+  /**
+  * 查找 clazz 的默认构造方法（元参构造方法） 具体实现是通过反射遥历所有构造方法.
+  * @param
+  **/
   private void addDefaultConstructor(Class<?> clazz) {
+    //获得所有的构造方法
     Constructor<?>[] constructors = clazz.getDeclaredConstructors();
+    //遍历所有无参构造方法
     Arrays.stream(constructors).filter(constructor -> constructor.getParameterTypes().length == 0)
       .findAny().ifPresent(constructor -> this.defaultConstructor = constructor);
   }
 
   private void addGetMethods(Class<?> clazz) {
+    //属性和映射的方法
     Map<String, List<Method>> conflictingGetters = new HashMap<>();
+    //获取所有的方法
     Method[] methods = getClassMethods(clazz);
+    //遍历所有的方法
     Arrays.stream(methods).filter(m -> m.getParameterTypes().length == 0 && PropertyNamer.isGetter(m.getName()))
       .forEach(m -> addMethodConflict(conflictingGetters, PropertyNamer.methodToProperty(m.getName()), m));
+    //解决getting冲突
     resolveGetterConflicts(conflictingGetters);
   }
 
   private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {
+    //遍历集合
     for (Entry<String, List<Method>> entry : conflictingGetters.entrySet()) {
       Method winner = null;
       String propName = entry.getKey();
@@ -109,10 +166,13 @@ public class Reflector {
             winner = candidate;
           }
         } else if (candidateType.isAssignableFrom(winnerType)) {
+          //当前最适合的方法的返回佳是当前方法返回佳的子类，什么都不做，当前最适合的方法
+          //依然不变
           // OK getter type is descendant
         } else if (winnerType.isAssignableFrom(candidateType)) {
           winner = candidate;
         } else {
+          //返回值相同，二义性，抛出异常
           throw new ReflectionException(
               "Illegal overloaded getter method with ambiguous type for property "
                   + propName + " in class " + winner.getDeclaringClass()
@@ -220,14 +280,19 @@ public class Reflector {
   }
 
   private void addFields(Class<?> clazz) {
+    //获得所有的属性
     Field[] fields = clazz.getDeclaredFields();
+    //遍历所有属性的数组
     for (Field field : fields) {
       if (!setMethods.containsKey(field.getName())) {
         // issue #379 - removed the check for final because JDK 1.5 allows
         // modification of final fields through reflection (JSR-133). (JGB)
         // pr #16 - final static can only be set by the classloader
         int modifiers = field.getModifiers();
+        //过滤掉 final和static 修饰的字段
         if (!(Modifier.isFinal(modifiers) && Modifier.isStatic(modifiers))) {
+         //addSetField()方法的主要功能是填充 setMethod 集合 setypes 集合，
+          //与 addGetMethod()方法类似
           addSetField(field);
         }
       }
@@ -270,21 +335,25 @@ public class Reflector {
    * @return An array containing all methods in this class
    */
   private Method[] getClassMethods(Class<?> clazz) {
+    //每个方法的签名与该方法的映射
     Map<String, Method> uniqueMethods = new HashMap<>();
+    //循环类，类的父类，类的父类的父类，直到父类为 Object
     Class<?> currentClass = clazz;
     while (currentClass != null && currentClass != Object.class) {
+      //<1> 记录当前类定义的方法
       addUniqueMethods(uniqueMethods, currentClass.getDeclaredMethods());
 
       // we also need to look for interface methods -
       // because the class may be abstract
+      //记录接口自定义的方法
       Class<?>[] interfaces = currentClass.getInterfaces();
       for (Class<?> anInterface : interfaces) {
         addUniqueMethods(uniqueMethods, anInterface.getMethods());
       }
-
+      //获得父类
       currentClass = currentClass.getSuperclass();
     }
-
+    //转换成 Method 数组返回
     Collection<Method> methods = uniqueMethods.values();
 
     return methods.toArray(new Method[0]);
@@ -378,6 +447,7 @@ public class Reflector {
    *
    * @param propertyName - the name of the property
    * @return The Class of the property setter
+   * 获取setter参数类型
    */
   public Class<?> getSetterType(String propertyName) {
     Class<?> clazz = setTypes.get(propertyName);

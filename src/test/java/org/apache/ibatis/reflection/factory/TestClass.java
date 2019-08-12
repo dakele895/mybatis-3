@@ -28,4 +28,12 @@ public class TestClass {
     this.myString = myString;
     this.myInteger = myInteger;
   }
+
+  @Override
+  public String toString() {
+    return "TestClass{" +
+      "myString='" + myString + '\'' +
+      ", myInteger=" + myInteger +
+      '}';
+  }
 }

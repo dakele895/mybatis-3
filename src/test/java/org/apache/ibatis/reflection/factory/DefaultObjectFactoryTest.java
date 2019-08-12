@@ -43,7 +43,7 @@ class DefaultObjectFactoryTest {
     DefaultObjectFactory defaultObjectFactory = new DefaultObjectFactory();
     TestClass testClass = defaultObjectFactory.create(TestClass.class,
         Arrays.asList(String.class, Integer.class), Arrays.asList("foo", 0));
-
+    System.out.println(testClass.toString());
     Assertions.assertEquals((Integer) 0, testClass.myInteger, "myInteger didn't match expected");
     Assertions.assertEquals("foo", testClass.myString, "myString didn't match expected");
   }
