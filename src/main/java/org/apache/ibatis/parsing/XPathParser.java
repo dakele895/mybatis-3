@@ -51,11 +51,11 @@ public class XPathParser {
    */
   private final Document document;
   /**
-   * 是否校验
+   * 是否开启验证
    */
   private boolean validation;
   /**
-   * XML 实体解析器
+   * DTD本地解析
    */
   private EntityResolver entityResolver;
   /**
