@@ -51,10 +51,22 @@ import org.apache.ibatis.type.JdbcType;
  * @author Kazuki Shimizu
  */
 public class XMLConfigBuilder extends BaseBuilder {
-
+  /**
+   * 标识是否已经解析 mybat s-config.xml 配置丈件
+   */
   private boolean parsed;
+  /**
+   *用于解析 mybatis config xml 配置文件的 XPathParser 对象
+   **/
   private final XPathParser parser;
+
+  /**
+   *标识＜environment ＞配置的名称，默认读取＜env ronment 标签的 default 属性
+   **/
   private String environment;
+  /**
+   *创建和缓存reflector对象
+   **/
   private final ReflectorFactory localReflectorFactory = new DefaultReflectorFactory();
 
   public XMLConfigBuilder(Reader reader) {

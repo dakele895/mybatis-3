@@ -32,6 +32,9 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
  * @author Clinton Begin
  */
 public abstract class BaseBuilder {
+  /**
+   * MyBatis Configuration 对象
+   */
   protected final Configuration configuration;
   protected final TypeAliasRegistry typeAliasRegistry;
   protected final TypeHandlerRegistry typeHandlerRegistry;
@@ -46,23 +49,38 @@ public abstract class BaseBuilder {
     return configuration;
   }
 
+  /**
+   * 创建正则表达式
+   *
+   * @param regex 指定表达式
+   * @param defaultValue 默认表达式
+   * @return 正则表达式
+   */
   protected Pattern parseExpression(String regex, String defaultValue) {
     return Pattern.compile(regex == null ? defaultValue : regex);
   }
-
+  /**
+   *字符转换
+   **/
   protected Boolean booleanValueOf(String value, Boolean defaultValue) {
     return value == null ? defaultValue : Boolean.valueOf(value);
   }
-
+  /**
+   *字符转换
+   **/
   protected Integer integerValueOf(String value, Integer defaultValue) {
     return value == null ? defaultValue : Integer.valueOf(value);
   }
-
+  /**
+   *字符转换
+   **/
   protected Set<String> stringSetValueOf(String value, String defaultValue) {
     value = value == null ? defaultValue : value;
     return new HashSet<>(Arrays.asList(value.split(",")));
   }
-
+  /**
+   *解析对应的jdbc类型
+   **/
   protected JdbcType resolveJdbcType(String alias) {
     if (alias == null) {
       return null;
@@ -74,6 +92,9 @@ public abstract class BaseBuilder {
     }
   }
 
+  /**
+   *解析对应的resolveResultSetType类型
+   **/
   protected ResultSetType resolveResultSetType(String alias) {
     if (alias == null) {
       return null;
@@ -85,6 +106,9 @@ public abstract class BaseBuilder {
     }
   }
 
+  /**
+   *解析对应的 ParameterMode 类型
+   **/
   protected ParameterMode resolveParameterMode(String alias) {
     if (alias == null) {
       return null;
@@ -96,6 +120,9 @@ public abstract class BaseBuilder {
     }
   }
 
+  /**
+   *创建指定的对象
+   **/
   protected Object createInstance(String alias) {
     Class<?> clazz = resolveClass(alias);
     if (clazz == null) {
@@ -108,6 +135,9 @@ public abstract class BaseBuilder {
     }
   }
 
+  /**
+   *获得相应的类型
+   **/
   protected <T> Class<? extends T> resolveClass(String alias) {
     if (alias == null) {
       return null;
@@ -119,6 +149,9 @@ public abstract class BaseBuilder {
     }
   }
 
+  /**
+   *从 typeHandlerRegistry 中获得或创建对应的 TypeHandler 对象。
+   **/
   protected TypeHandler<?> resolveTypeHandler(Class<?> javaType, String typeHandlerAlias) {
     if (typeHandlerAlias == null) {
       return null;

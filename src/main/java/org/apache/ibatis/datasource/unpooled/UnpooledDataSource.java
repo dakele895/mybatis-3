@@ -33,22 +33,43 @@ import javax.sql.DataSource;
 import org.apache.ibatis.io.Resources;
 
 /**
- * @author Clinton Begin
- * @author Eduardo Macarron
+ * 已注册的 Driver 映射
+ *
+ * KEY：Driver 类名
+ * VALUE：Driver 对象
  */
 public class UnpooledDataSource implements DataSource {
 
+  /**
+   * Driver 类加载器
+   */
   private ClassLoader driverClassLoader;
-  private Properties driverProperties;
-  private static Map<String, Driver> registeredDrivers = new ConcurrentHashMap<>();
 
+  /**
+   * Driver 属性
+   */
+  private Properties driverProperties;
+
+  private static Map<String, Driver> registeredDrivers = new ConcurrentHashMap<>();
+  /**
+   * 类名
+   */
   private String driver;
+
   private String url;
   private String username;
   private String password;
-
+  /**
+   * 是否自动提交事务
+   */
   private Boolean autoCommit;
+  /**
+   * 默认事务隔离级别
+   */
   private Integer defaultTransactionIsolationLevel;
+  /**
+   *超时时间
+   **/
   private Integer defaultNetworkTimeout;
 
   static {
@@ -215,7 +236,9 @@ public class UnpooledDataSource implements DataSource {
     }
     return doGetConnection(props);
   }
-
+  /*
+   *获取Connection连接
+   */
   private Connection doGetConnection(Properties properties) throws SQLException {
     initializeDriver();
     Connection connection = DriverManager.getConnection(url, properties);
