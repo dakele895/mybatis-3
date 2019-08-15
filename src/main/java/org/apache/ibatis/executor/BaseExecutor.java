@@ -50,16 +50,20 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 public abstract class BaseExecutor implements Executor {
 
   private static final Log log = LogFactory.getLog(BaseExecutor.class);
-
+  //事务对象
   protected Transaction transaction;
+  //包装执行器的对象
   protected Executor wrapper;
-
+  //DeferredLoad( 延迟加载 ) 队列
   protected ConcurrentLinkedQueue<DeferredLoad> deferredLoads;
+  //本地缓存一级缓存
   protected PerpetualCache localCache;
+  //本地输出类型的参数的缓存
   protected PerpetualCache localOutputParameterCache;
   protected Configuration configuration;
-
+  //记录嵌套查询的层级
   protected int queryStack;
+  //是否关闭
   private boolean closed;
 
   protected BaseExecutor(Configuration configuration, Transaction transaction) {
@@ -196,11 +200,14 @@ public abstract class BaseExecutor implements Executor {
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
+    // <1> 创建 CacheKey 对象
     CacheKey cacheKey = new CacheKey();
+    // <2> 设置 id、offset、limit、sql 到 CacheKey 对象中
     cacheKey.update(ms.getId());
     cacheKey.update(rowBounds.getOffset());
     cacheKey.update(rowBounds.getLimit());
     cacheKey.update(boundSql.getSql());
+    // <3> 设置 ParameterMapping 数组的元素对应的每个 value 到 CacheKey 对象中
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
     TypeHandlerRegistry typeHandlerRegistry = ms.getConfiguration().getTypeHandlerRegistry();
     // mimic DefaultParameterHandler logic
@@ -221,6 +228,7 @@ public abstract class BaseExecutor implements Executor {
         cacheKey.update(value);
       }
     }
+    // <4> 设置 Environment.id 到 CacheKey 对象中
     if (configuration.getEnvironment() != null) {
       // issue #176
       cacheKey.update(configuration.getEnvironment().getId());
